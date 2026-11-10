@@ -1,0 +1,43 @@
+/* Design tokens follow the EMBL-EBI / BioImage Archive visual style
+   (IBM Plex Sans, blue #3B6FB6 primary, green #18974C accent). Light only,
+   matching the BIA site. */
+:root {
+  --font: 'IBM Plex Sans', Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, 'IBM Plex Mono', Consolas, monospace;
+
+  --text: #1a1c1a;
+  --text-muted: #54585a;
+  --bg: #ffffff;
+  --panel: #f6f6f6;
+  --border: #d4d7d5;
+
+  --accent: #3b6fb6; /* BIA primary blue */
+  --accent-strong: #2c5591;
+  --accent-bg: #d1e3f6; /* light blue */
+  --green: #18974c; /* BIA / EMBL-EBI green */
+  --charcoal: #373a36;
+
+  font: 16px/1.5 var(--font);
+  color-scheme: light;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}

@@ -1,0 +1,4 @@
+# pnpm settings (pnpm 11+ reads build-script allowlists from here, not package.json).
+# esbuild ships a native binary built by a postinstall script; Vite/Vitest need it.
+allowBuilds:
+  esbuild: true
