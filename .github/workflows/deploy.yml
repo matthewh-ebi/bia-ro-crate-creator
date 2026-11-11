@@ -1,5 +1,7 @@
 name: Deploy to GitHub Pages
 
+# Every push to main is tested, built and published; it can also be started
+# by hand from the Actions tab (or `gh workflow run deploy.yml`).
 on:
   push:
     branches: [main]
