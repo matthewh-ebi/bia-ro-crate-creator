@@ -37,7 +37,7 @@ export function Overview() {
         <section className="card intro">
           <h2 className="card-title">Getting started</h2>
           <ol>
-            <li><a href={entityHref(STUDY_UID)}>Fill in the study</a>: title, description, accession, licence, authors.</li>
+            <li><a href={entityHref(STUDY_UID)}>Fill in the study</a>: title, description, licence, authors.</li>
             <li>Create the REMBI components from the sidebar: BioSamples, specimen preparation, image acquisition (or annotation methods).</li>
             <li>Create datasets and link each one to the components that describe it.</li>
             <li><a href="#/export">Export</a> a zip containing <code>ro-crate-metadata.json</code> and a stub <code>file_list.tsv</code>.</li>

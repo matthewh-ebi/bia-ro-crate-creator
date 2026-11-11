@@ -10,7 +10,6 @@ export function idrLikeDraft(): Draft {
   return run([
     { kind: 'setField', uid: STUDY_UID, key: 'name', value: 'idr0027 chromatin' },
     { kind: 'setField', uid: STUDY_UID, key: 'description', value: 'Live imaging of chromatin.' },
-    { kind: 'setField', uid: STUDY_UID, key: 'accessionId', value: 'IDR0027' },
     { kind: 'setField', uid: STUDY_UID, key: 'license', value: 'https://creativecommons.org/licenses/by/4.0/' },
     { kind: 'setField', uid: STUDY_UID, key: 'keywords', value: ['time-lapse imaging', ' '] },
     { kind: 'add', uid: 'a1', entityType: 'contributor', linkFrom: { from: STUDY_UID, rel: 'author' } },

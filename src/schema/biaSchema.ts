@@ -99,11 +99,11 @@ export const TYPE_SPECS: readonly TypeSpec[] = [
     idPrefix: 'study',
     titleField: 'name',
     singleton: true,
-    description: 'The crate root (“./”). Every dataset is automatically part of the study.',
+    description:
+      'The crate root (“./”). Every dataset is automatically part of the study. The accession ID is assigned by the BioImage Archive on submission, so it is not part of the crate.',
     fields: [
       { key: 'name', label: 'Title', kind: 'text', requirement: 'required' },
       { key: 'description', label: 'Description', kind: 'textarea', requirement: 'required' },
-      { key: 'accessionId', label: 'Accession ID', kind: 'text', requirement: 'required', placeholder: 'S-BIAD…' },
       { key: 'license', label: 'Licence', kind: 'url', requirement: 'required', suggestions: LICENCES },
       { key: 'datePublished', label: 'Release date', kind: 'date', requirement: 'recommended' },
       { key: 'keywords', label: 'Keywords', kind: 'list', requirement: 'recommended' },

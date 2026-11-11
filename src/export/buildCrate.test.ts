@@ -30,7 +30,6 @@ describe('buildCrate', () => {
     expect(byId(graph, './')).toMatchObject({
       '@type': ['Dataset', 'bia:Study'],
       name: 'idr0027 chromatin',
-      accessionId: 'IDR0027',
       keywords: ['time-lapse imaging'],
     })
   })
@@ -57,6 +56,11 @@ describe('buildCrate', () => {
     expect(byId(graph, '#biosample-dd1407')).toMatchObject({
       organismClassification: [{ '@id': 'http://purl.obolibrary.org/obo/NCBITaxon_4932' }],
     })
+  })
+
+  it('never exports an accession ID, even one saved in an older draft', () => {
+    const d = run([{ kind: 'setField', uid: 'study', key: 'accessionId', value: 'S-BIAD123' }], idrLikeDraft())
+    expect('accessionId' in byId(buildCrate(d)['@graph'] as N[], './')!).toBe(false)
   })
 
   it('omits empty values', () => {
@@ -108,10 +112,10 @@ describe('buildCrate', () => {
 describe('buildCrateZip', () => {
   it('produces a folder containing metadata and file list', () => {
     const { filename, bytes } = buildCrateZip(idrLikeDraft())
-    expect(filename).toBe('idr0027.zip')
+    expect(filename).toBe('idr0027-chromatin.zip')
     const files = unzipSync(bytes)
-    expect(Object.keys(files).filter((k) => !k.endsWith('/')).sort()).toEqual(['idr0027/file_list.tsv', 'idr0027/ro-crate-metadata.json'])
-    const meta = JSON.parse(strFromU8(files['idr0027/ro-crate-metadata.json']))
+    expect(Object.keys(files).filter((k) => !k.endsWith('/')).sort()).toEqual(['idr0027-chromatin/file_list.tsv', 'idr0027-chromatin/ro-crate-metadata.json'])
+    const meta = JSON.parse(strFromU8(files['idr0027-chromatin/ro-crate-metadata.json']))
     expect(meta['@graph'].length).toBeGreaterThan(10)
   })
 })

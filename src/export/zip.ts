@@ -5,10 +5,9 @@ import { FILE_LIST_NAME, buildCrate, buildFileListTsv, slugify } from './buildCr
 /** Folder name inside the zip (so unzipping yields a crate folder to drop into the explorer). */
 export function crateFolderName(draft: Draft): string {
   const study = draft.entities.find((e) => e.type === 'study')
-  const acc = study?.fields.accessionId
+  // Named from the title: the accession ID is assigned by the archive after submission.
   const name = study?.fields.name
-  const pick = (typeof acc === 'string' && acc.trim()) || (typeof name === 'string' && name.trim()) || ''
-  return slugify(pick) || 'bia-ro-crate'
+  return slugify(typeof name === 'string' ? name : '') || 'bia-ro-crate'
 }
 
 export function buildCrateZip(draft: Draft): { filename: string; bytes: Uint8Array } {

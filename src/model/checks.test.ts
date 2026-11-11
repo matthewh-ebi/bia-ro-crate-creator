@@ -13,7 +13,8 @@ describe('checkDraft', () => {
 
   it('flags required study fields and missing datasets on an empty draft', () => {
     const msgs = errors(emptyDraft()).map((i) => i.key ?? i.message)
-    expect(msgs).toEqual(expect.arrayContaining(['name', 'description', 'accessionId', 'license']))
+    expect(msgs).toEqual(expect.arrayContaining(['name', 'description', 'license']))
+    expect(msgs).not.toContain('accessionId') // assigned by the archive, not the submitter
     expect(msgs).toContain('The study has no datasets yet.')
   })
 
