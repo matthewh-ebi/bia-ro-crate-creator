@@ -7,6 +7,8 @@ datasets, and export a crate that loads in the
 [BIA RO-Crate Explorer](https://github.com/matthewh-ebi/bia-ro-crate-explorer).
 Drafts are autosaved to browser localStorage only.
 
+**Live:** https://matthewh-ebi.github.io/bia-ro-crate-creator/
+
 ```sh
 pnpm install
 pnpm dev        # http://localhost:5173
@@ -33,6 +35,12 @@ store/, views/       ── React UI reading the draft via context
   ROR, DOI, NCBI taxon) if one is set, otherwise a minted `#<prefix>-<slug>`.
 - Deleting an entity cascades to its edges, so the draft can't contain
   dangling references.
+
+## Deployment
+
+Pushes to `main` run the tests, build, and publish to GitHub Pages via
+`.github/workflows/deploy.yml`. The build uses a relative base path, so the
+same output works under any Pages sub-path.
 
 ## Not yet supported
 
