@@ -664,3 +664,155 @@ code {
   font-size: 13px;
   margin: 4px 0 8px;
 }
+
+/* ── Dataset rail (right) ────────────────────────────────── */
+.rail {
+  width: 300px;
+  flex-shrink: 0;
+  background: var(--panel);
+  border-left: 1px solid var(--border);
+  padding: 14px 12px 24px;
+  overflow-y: auto;
+  position: sticky;
+  top: 54px;
+  height: calc(100vh - 54px);
+}
+.rail-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 4px 2px 8px;
+}
+.rail-head h2 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--charcoal);
+}
+.rail-hint {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0 2px 10px;
+}
+.rail-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  margin-bottom: 8px;
+}
+.rail-card.linked {
+  border-color: var(--accent);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.rail-card.current {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+.rail-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.rail-card-head input {
+  margin: 0;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.rail-title {
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--text);
+  min-width: 0;
+}
+.rail-slots {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+}
+.rail-slot {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  gap: 6px;
+  padding: 2px 0;
+}
+.rail-slot dt {
+  color: var(--text-muted);
+}
+.rail-slot dd {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  min-width: 0;
+}
+.rail-chip {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: var(--accent-bg);
+  color: var(--accent-strong);
+  border-radius: 10px;
+  padding: 0 8px;
+}
+.rail-chip.focus {
+  background: var(--accent);
+  color: #fff;
+}
+.rail-missing {
+  background: var(--error-bg);
+  color: var(--error);
+  border-radius: 10px;
+  padding: 0 8px;
+}
+.rail-or {
+  font-size: 12px;
+  margin: 4px 0 0;
+}
+.rail-new {
+  width: 100%;
+  margin-top: 4px;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Wide screens: datasets live only in the rail. */
+@media (min-width: 1101px) {
+  .side-group-datasets {
+    display: none;
+  }
+}
+/* Narrower: the rail folds under the editor and the sidebar lists datasets again. */
+@media (max-width: 1100px) {
+  .body {
+    flex-wrap: wrap;
+  }
+  .rail {
+    width: 100%;
+    height: auto;
+    position: static;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 8px;
+    align-items: start;
+  }
+  .rail-head,
+  .rail-hint,
+  .rail-new {
+    grid-column: 1 / -1;
+  }
+  .rail-card {
+    margin-bottom: 0;
+  }
+  .rail-new {
+    width: auto;
+    justify-self: start;
+  }
+}

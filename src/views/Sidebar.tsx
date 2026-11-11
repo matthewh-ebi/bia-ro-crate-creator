@@ -16,7 +16,11 @@ export function Sidebar({ route }: { route: Route }) {
         {errorCount > 0 && <span className="count count-error">{errorCount}</span>}
       </a>
       {GROUPS.map((group) => (
-        <section key={group} className="side-group">
+        <section
+          key={group}
+          // Datasets live in the right-hand rail; this copy only shows when the rail is folded away on narrow screens.
+          className={`side-group ${group === 'Datasets' ? 'side-group-datasets' : ''}`}
+        >
           <h2>{group}</h2>
           {TYPE_SPECS.filter((s) => s.group === group && !s.embedded).map((spec) => (
             <TypeSection key={spec.type} spec={spec} route={route} />

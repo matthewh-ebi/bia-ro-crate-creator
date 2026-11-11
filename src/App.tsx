@@ -4,6 +4,7 @@ import { emptyDraft, readDraft } from './model/draft'
 import { DraftProvider, useDraft } from './store/DraftContext'
 import { downloadBlob } from './store/persistence'
 import { EntityEditor } from './views/EntityEditor'
+import { DatasetRail } from './views/DatasetRail'
 import { ExportView } from './views/ExportView'
 import { Overview } from './views/Overview'
 import { Sidebar } from './views/Sidebar'
@@ -95,6 +96,7 @@ function Shell() {
           {route.view === 'export' && <ExportView />}
           {route.view === 'entity' && <EntityEditor key={route.uid} uid={route.uid} from={route.from} />}
         </main>
+        <DatasetRail route={route} />
       </div>
     </div>
   )
