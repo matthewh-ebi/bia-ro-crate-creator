@@ -2,7 +2,7 @@ import { GROUPS, TYPE_SPECS } from '../schema/biaSchema'
 import type { TypeSpec } from '../schema/types'
 import { titleOf } from '../model/draft'
 import { newUid, useDraft } from '../store/DraftContext'
-import { SeverityDot } from './bits'
+import { SeverityDot, TitleWithParts } from './bits'
 import { entityHref, go, type Route } from './route'
 
 export function Sidebar({ route }: { route: Route }) {
@@ -18,7 +18,7 @@ export function Sidebar({ route }: { route: Route }) {
       {GROUPS.map((group) => (
         <section key={group} className="side-group">
           <h2>{group}</h2>
-          {TYPE_SPECS.filter((s) => s.group === group).map((spec) => (
+          {TYPE_SPECS.filter((s) => s.group === group && !s.embedded).map((spec) => (
             <TypeSection key={spec.type} spec={spec} route={route} />
           ))}
         </section>
@@ -62,7 +62,7 @@ function TypeSection({ spec, route }: { spec: TypeSpec; route: Route }) {
       </div>
       {items.map((e) => (
         <a key={e.uid} className={`side-link sub ${currentUid === e.uid ? 'current' : ''}`} href={entityHref(e.uid)}>
-          <span className="ellipsis">{titleOf(e)}</span>
+          <span className="ellipsis"><TitleWithParts entity={e} /></span>
           <SeverityDot severity={worst.get(e.uid)} />
         </a>
       ))}

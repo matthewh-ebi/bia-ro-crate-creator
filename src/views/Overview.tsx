@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { SEVERITY_RANK } from '../model/checks'
-import { STUDY_UID, targetsOf, titleOf, type Entity } from '../model/draft'
+import { STUDY_UID, ownersOf, targetsOf, titleOf, type Entity } from '../model/draft'
 import { SPEC_BY_TYPE } from '../schema/biaSchema'
 import { newUid, useDraft } from '../store/DraftContext'
-import { SeverityDot } from './bits'
+import { SeverityDot, TitleWithParts } from './bits'
 import { entityHref, go } from './route'
 
 const MATRIX_COLUMNS = SPEC_BY_TYPE.dataset.relations
@@ -99,10 +99,15 @@ export function Overview() {
           <ul className="issues">
             {shown.map((i, n) => {
               const e = byUid.get(i.uid)!
+              const owner = SPEC_BY_TYPE[e.type].embedded ? ownersOf(draft, e.uid)[0] : undefined
+              const at = owner ?? e
               return (
                 <li key={n} className={`sev-${i.severity}`}>
                   <span className={`sev-tag sev-tag-${i.severity}`}>{i.severity === 'info' ? 'suggestion' : i.severity}</span>
-                  <a href={entityHref(i.uid)}>{SPEC_BY_TYPE[e.type].label}: {titleOf(e)}</a>
+                  <a href={entityHref(at.uid)}>
+                    {SPEC_BY_TYPE[at.type].label}: {titleOf(at)}
+                    {owner && ` › ${SPEC_BY_TYPE[e.type].label}`}
+                  </a>
                   <span>{i.message}</span>
                 </li>
               )
@@ -121,7 +126,7 @@ function Targets({ list, from }: { list: Entity[]; from: string }) {
       {list.map((e, i) => (
         <span key={e.uid}>
           {i > 0 && ', '}
-          <a href={entityHref(e.uid, from)}>{titleOf(e)}</a>
+          <a href={entityHref(e.uid, from)}><TitleWithParts entity={e} /></a>
         </span>
       ))}
     </>

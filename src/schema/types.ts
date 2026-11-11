@@ -14,9 +14,7 @@ export type EntityType =
   | 'fundingBody'
   | 'taxon'
   | 'bioSample'
-  | 'protocol'
   | 'specimenPrep'
-  | 'signalChannel'
   | 'imageAcquisition'
   | 'annotationMethod'
   | 'dataset'
@@ -80,5 +78,12 @@ export interface TypeSpec {
   iri?: IriSpec
   /** Exactly one instance exists; it cannot be created or deleted. */
   singleton?: boolean
+  /**
+   * Owned by the entities that link to it: edited inline in the linking
+   * entity's form, not listed in the sidebar, and removed automatically once
+   * nothing links to it. (Still exported as its own node, e.g. a bia:Taxon
+   * shared by several BioSamples.)
+   */
+  embedded?: boolean
   description?: string
 }

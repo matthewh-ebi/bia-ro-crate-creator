@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import './App.css'
-import { emptyDraft, isDraft } from './model/draft'
+import { emptyDraft, readDraft } from './model/draft'
 import { DraftProvider, useDraft } from './store/DraftContext'
 import { downloadBlob } from './store/persistence'
 import { EntityEditor } from './views/EntityEditor'
@@ -35,8 +35,8 @@ function Shell() {
 
   const restore = async (file: File) => {
     try {
-      const parsed: unknown = JSON.parse(await file.text())
-      if (!isDraft(parsed)) {
+      const parsed = readDraft(JSON.parse(await file.text()))
+      if (!parsed) {
         alert('That file is not an editor draft backup. (Importing RO-Crates is not supported yet.)')
         return
       }

@@ -31,7 +31,7 @@ export function DraftProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(() => {
     const issues = checkDraft(draft)
-    return { draft, dispatch, issues, worst: worstByEntity(issues), savedAt, saveFailed }
+    return { draft, dispatch, issues, worst: worstByEntity(issues, draft), savedAt, saveFailed }
   }, [draft, savedAt, saveFailed])
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>

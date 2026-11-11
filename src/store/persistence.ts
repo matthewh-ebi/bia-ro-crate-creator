@@ -1,4 +1,4 @@
-import { emptyDraft, isDraft, type Draft } from '../model/draft'
+import { emptyDraft, readDraft, type Draft } from '../model/draft'
 
 export const STORAGE_KEY = 'bia-ro-crate-editor:draft:v1'
 
@@ -6,8 +6,8 @@ export function loadDraft(): Draft {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) {
-      const parsed: unknown = JSON.parse(raw)
-      if (isDraft(parsed)) return parsed
+      const draft = readDraft(JSON.parse(raw))
+      if (draft) return draft
     }
   } catch {
     // Unreadable or blocked storage: start fresh rather than fail.

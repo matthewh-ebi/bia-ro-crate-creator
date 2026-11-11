@@ -56,7 +56,6 @@ describe('buildCrate', () => {
     })
     expect(byId(graph, '#biosample-dd1407')).toMatchObject({
       organismClassification: [{ '@id': 'http://purl.obolibrary.org/obo/NCBITaxon_4932' }],
-      growthProtocol: { '@id': '#protocol-growth-protocol' },
     })
   })
 
@@ -91,13 +90,13 @@ describe('buildCrate', () => {
 
   it('deduplicates minted ids and falls back to uid for untitled entities', () => {
     const d = run([
-      { kind: 'add', uid: 'p-aaaa1111', entityType: 'protocol' },
-      { kind: 'add', uid: 'p-bbbb2222', entityType: 'protocol' },
-      { kind: 'setField', uid: 'p-bbbb2222', key: 'name', value: 'growth protocol' },
+      { kind: 'add', uid: 'p-aaaa1111', entityType: 'imageAcquisition' },
+      { kind: 'add', uid: 'p-bbbb2222', entityType: 'imageAcquisition' },
+      { kind: 'setField', uid: 'p-bbbb2222', key: 'name', value: 'OMX imaging' },
     ], idrLikeDraft())
     const ids = (buildCrate(d)['@graph'] as N[]).map((n) => n['@id'])
-    expect(ids).toContain('#protocol-p-aaaa11')
-    expect(ids).toContain('#protocol-growth-protocol-2')
+    expect(ids).toContain('#image-acquisition-p-aaaa11')
+    expect(ids).toContain('#image-acquisition-omx-imaging-2')
     expect(new Set(ids).size).toBe(ids.length)
   })
 

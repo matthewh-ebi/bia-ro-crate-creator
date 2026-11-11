@@ -145,10 +145,46 @@ function apply(draft: Draft, action: Action): Draft {
   }
 }
 
+/**
+ * Remove embedded entities (e.g. organisms) that nothing links to any more,
+ * along with their outgoing edges. Repeats until stable, since removing one
+ * can orphan another.
+ */
+export function pruneOrphans(draft: Draft): Draft {
+  let current = draft
+  for (;;) {
+    const linked = new Set(current.relationships.map((r) => r.to))
+    const orphans = new Set(
+      current.entities.filter((e) => SPEC_BY_TYPE[e.type].embedded && !linked.has(e.uid)).map((e) => e.uid),
+    )
+    if (orphans.size === 0) return current
+    current = {
+      ...current,
+      entities: current.entities.filter((e) => !orphans.has(e.uid)),
+      relationships: current.relationships.filter((r) => !orphans.has(r.from)),
+    }
+  }
+}
+
 export function reducer(draft: Draft, action: Action): Draft {
   const next = apply(draft, action)
   if (next === draft || action.kind === 'replace') return next
-  return { ...next, updatedAt: new Date().toISOString() }
+  return { ...pruneOrphans(next), updatedAt: new Date().toISOString() }
+}
+
+/** Titles of an entity's embedded parts, e.g. a BioSample's organisms. */
+export function embeddedSummary(draft: Draft, entity: Entity): string {
+  const byUid = new Map(draft.entities.map((e) => [e.uid, e]))
+  return SPEC_BY_TYPE[entity.type].relations
+    .filter((r) => SPEC_BY_TYPE[r.target].embedded)
+    .flatMap((r) => targetsOf(draft, entity.uid, r.key).map((uid) => titleOf(byUid.get(uid)!)))
+    .join(', ')
+}
+
+/** The entities linking to an embedded entity — where it is edited. */
+export function ownersOf(draft: Draft, uid: string): Entity[] {
+  const from = new Set(draft.relationships.filter((r) => r.to === uid).map((r) => r.from))
+  return draft.entities.filter((e) => from.has(e.uid))
 }
 
 /** Display name for an entity (falls back to "Untitled <type>"). */
@@ -159,15 +195,34 @@ export function titleOf(entity: Entity): string {
   return s.trim() || `Untitled ${spec.label.toLowerCase()}`
 }
 
-/** Loose structural check for restoring a backup or reading localStorage. */
-export function isDraft(value: unknown): value is Draft {
-  if (typeof value !== 'object' || value === null) return false
+/**
+ * Read a draft from localStorage or a backup file. Tolerates drafts saved by
+ * an older schema: entities of types the editor no longer supports (e.g.
+ * protocols, signal channels) and links that are no longer valid are dropped,
+ * rather than rejecting the whole draft. Returns null if it isn't a draft.
+ */
+export function readDraft(value: unknown): Draft | null {
+  if (typeof value !== 'object' || value === null) return null
   const d = value as Partial<Draft>
-  return (
-    d.schemaVersion === 1 &&
-    Array.isArray(d.entities) &&
-    Array.isArray(d.relationships) &&
-    d.entities.every((e) => typeof e?.uid === 'string' && e.type in SPEC_BY_TYPE && typeof e.fields === 'object') &&
-    d.entities.some((e) => e.type === 'study')
+  if (d.schemaVersion !== 1 || !Array.isArray(d.entities) || !Array.isArray(d.relationships)) return null
+
+  const entities = d.entities.filter(
+    (e): e is Entity =>
+      typeof e?.uid === 'string' && typeof e.type === 'string' && e.type in SPEC_BY_TYPE && typeof e.fields === 'object',
   )
+  if (!entities.some((e) => e.uid === STUDY_UID && e.type === 'study')) return null
+  const typeOf = new Map(entities.map((e) => [e.uid, e.type]))
+
+  const relationships = d.relationships.filter((r): r is Relationship => {
+    const from = typeOf.get(r?.from)
+    const to = typeOf.get(r?.to)
+    return from !== undefined && to !== undefined && relationSpec(from, r.rel)?.target === to
+  })
+
+  return pruneOrphans({
+    schemaVersion: 1,
+    entities: entities.map((e) => ({ ...e, iri: typeof e.iri === 'string' ? e.iri : '' })),
+    relationships,
+    updatedAt: typeof d.updatedAt === 'string' ? d.updatedAt : new Date().toISOString(),
+  })
 }

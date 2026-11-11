@@ -1,11 +1,11 @@
 import { useId, useMemo, useState } from 'react'
 import { assignIds } from '../export/buildCrate'
-import type { Issue } from '../model/checks'
-import { referrersOf, relationSpec, targetsOf, titleOf, type Entity, type FieldValue } from '../model/draft'
+import { IRI_KEY, type Issue } from '../model/checks'
+import { embeddedSummary, ownersOf, referrersOf, relationSpec, targetsOf, titleOf, type Entity, type FieldValue } from '../model/draft'
 import { SPEC_BY_TYPE } from '../schema/biaSchema'
 import type { FieldSpec, RelationSpec } from '../schema/types'
 import { newUid, useDraft } from '../store/DraftContext'
-import { RequirementTag, SeverityDot } from './bits'
+import { RequirementTag, SeverityDot, TitleWithParts } from './bits'
 import { entityHref, go } from './route'
 
 export function EntityEditor({ uid, from }: { uid: string; from?: string }) {
@@ -23,6 +23,29 @@ export function EntityEditor({ uid, from }: { uid: string; from?: string }) {
   }
 
   const spec = SPEC_BY_TYPE[entity.type]
+
+  // Embedded entities (organisms) are edited inside their owner's form.
+  if (spec.embedded) {
+    const owners = ownersOf(draft, uid)
+    return (
+      <div className="page">
+        <div className="eyebrow">{spec.label}</div>
+        <h1>{titleOf(entity)}</h1>
+        <p>
+          {spec.label}s are edited within the {owners.length > 1 ? 'entities' : 'entity'} that use{owners.length > 1 ? '' : 's'} them:{' '}
+          {owners.map((o, i) => (
+            <span key={o.uid}>
+              {i > 0 && ', '}
+              <a href={entityHref(o.uid)}>{titleOf(o)}</a>
+            </span>
+          ))}
+        </p>
+      </div>
+    )
+  }
+
+  const embeddedRels = spec.relations.filter((r) => SPEC_BY_TYPE[r.target].embedded)
+  const linkRels = spec.relations.filter((r) => !SPEC_BY_TYPE[r.target].embedded)
   const mine = issues.filter((i) => i.uid === uid)
   const issueFor = (key: string) => mine.find((i) => i.key === key)
   const banner = mine.filter((i) => i.severity !== 'info' && !i.key)
@@ -65,16 +88,20 @@ export function EntityEditor({ uid, from }: { uid: string; from?: string }) {
       )}
 
       <section className="card">
-        {spec.iri && <IriField entity={entity} />}
+        {spec.iri && <IriField entity={entity} issue={issueFor(IRI_KEY)} />}
         {spec.fields.map((f) => (
           <Field key={f.key} entity={entity} spec={f} issue={issueFor(f.key)} />
         ))}
       </section>
 
-      {spec.relations.length > 0 && (
+      {embeddedRels.map((r) => (
+        <EmbeddedRelation key={r.key} entity={entity} spec={r} issue={issueFor(r.key)} />
+      ))}
+
+      {linkRels.length > 0 && (
         <section className="card">
           <h2 className="card-title">Links</h2>
-          {spec.relations.map((r) => (
+          {linkRels.map((r) => (
             <RelationField key={r.key} entity={entity} spec={r} issue={issueFor(r.key)} />
           ))}
         </section>
@@ -115,13 +142,13 @@ function FieldLabel({ htmlFor, label, requirement, help }: { htmlFor?: string; l
   )
 }
 
-function IriField({ entity }: { entity: Entity }) {
+function IriField({ entity, issue }: { entity: Entity; issue?: Issue }) {
   const { dispatch } = useDraft()
   const iri = SPEC_BY_TYPE[entity.type].iri!
   const id = useId()
   const resolved = iri.normalise(entity.iri)
   return (
-    <div className="field">
+    <div className={`field ${issue?.severity === 'error' ? 'invalid' : ''}`}>
       <FieldLabel htmlFor={id} label={iri.label} requirement="optional" help={iri.help} />
       <input
         id={id}
@@ -130,6 +157,98 @@ function IriField({ entity }: { entity: Entity }) {
         onChange={(e) => dispatch({ kind: 'setIri', uid: entity.uid, value: e.target.value })}
       />
       {resolved && resolved !== entity.iri.trim() && <div className="hint">→ {resolved}</div>}
+      {issue && <div className="field-error">{issue.message}</div>}
+    </div>
+  )
+}
+
+/**
+ * An embedded relation (e.g. a BioSample's organisms): the targets' own fields
+ * are edited inline here rather than on separate pages. Removing one unlinks
+ * it; the reducer deletes it once no other entity uses it.
+ */
+function EmbeddedRelation({ entity, spec, issue }: { entity: Entity; spec: RelationSpec; issue?: Issue }) {
+  const { draft, dispatch } = useDraft()
+  const id = useId()
+  const targetSpec = SPEC_BY_TYPE[spec.target]
+  const noun = targetSpec.label.toLowerCase()
+  const targets = targetsOf(draft, entity.uid, spec.key)
+  const byUid = new Map(draft.entities.map((e) => [e.uid, e]))
+  const candidates = draft.entities.filter((e) => e.type === spec.target && !targets.includes(e.uid))
+  const canAddMore = spec.many || targets.length === 0
+
+  return (
+    <section className={`card ${issue?.severity === 'error' ? 'card-invalid' : ''}`}>
+      <div className="card-head">
+        <h2 className="card-title">
+          {spec.label} <RequirementTag requirement={spec.requirement} />
+        </h2>
+      </div>
+      {targets.length === 0 && (
+        <p className={issue?.severity === 'error' ? 'field-error' : 'muted small'}>
+          No {noun} yet. Add the {noun} this {SPEC_BY_TYPE[entity.type].label} comes from.
+        </p>
+      )}
+      {targets.map((t) => (
+        <EmbeddedCard key={t} owner={entity} rel={spec.key} target={byUid.get(t)!} />
+      ))}
+      {canAddMore && (
+        <div className="link-add">
+          <button
+            type="button"
+            className="btn small"
+            onClick={() => dispatch({ kind: 'add', uid: newUid(), entityType: spec.target, linkFrom: { from: entity.uid, rel: spec.key } })}
+          >
+            + Add {noun}
+          </button>
+          {candidates.length > 0 && (
+            <select
+              id={id}
+              aria-label={`Use an existing ${noun}`}
+              value=""
+              onChange={(e) => e.target.value && dispatch({ kind: 'link', from: entity.uid, rel: spec.key, to: e.target.value })}
+            >
+              <option value="">Use an existing {noun}…</option>
+              {candidates.map((c) => (
+                <option key={c.uid} value={c.uid}>{titleOf(c)}</option>
+              ))}
+            </select>
+          )}
+        </div>
+      )}
+    </section>
+  )
+}
+
+function EmbeddedCard({ owner, rel, target }: { owner: Entity; rel: string; target: Entity }) {
+  const { draft, dispatch, issues } = useDraft()
+  const spec = SPEC_BY_TYPE[target.type]
+  const mine = issues.filter((i) => i.uid === target.uid)
+  const issueFor = (key: string) => mine.find((i) => i.key === key)
+  const others = ownersOf(draft, target.uid).filter((o) => o.uid !== owner.uid)
+
+  return (
+    <div className="embedded">
+      <div className="embedded-head">
+        <strong>{titleOf(target)}</strong>
+        <button
+          type="button"
+          className="btn small ghost"
+          title={others.length ? `Remove from this ${SPEC_BY_TYPE[owner.type].label} (kept for the others)` : undefined}
+          onClick={() => dispatch({ kind: 'unlink', from: owner.uid, rel, to: target.uid })}
+        >
+          Remove
+        </button>
+      </div>
+      {others.length > 0 && (
+        <p className="muted small shared-note">
+          Shared with {others.map((o) => titleOf(o)).join(', ')}. Edits here apply to all of them.
+        </p>
+      )}
+      {spec.iri && <IriField entity={target} issue={issueFor(IRI_KEY)} />}
+      {spec.fields.map((f) => (
+        <Field key={f.key} entity={target} spec={f} issue={issueFor(f.key)} />
+      ))}
     </div>
   )
 }
@@ -213,6 +332,11 @@ function RelationField({ entity, spec, issue }: { entity: Entity; spec: Relation
   const candidates = draft.entities.filter((e) => e.type === spec.target && !targets.includes(e.uid))
   const canAddMore = spec.many || targets.length === 0
 
+  const optionLabel = (c: Entity) => {
+    const parts = embeddedSummary(draft, c)
+    return parts ? `${titleOf(c)} (${parts})` : titleOf(c)
+  }
+
   const createNew = () => {
     const uid = newUid()
     dispatch({ kind: 'add', uid, entityType: spec.target, linkFrom: { from: entity.uid, rel: spec.key } })
@@ -228,7 +352,7 @@ function RelationField({ entity, spec, issue }: { entity: Entity; spec: Relation
             const e = byUid.get(t)!
             return (
               <li key={t}>
-                <a href={entityHref(t, entity.uid)}>{titleOf(e)}</a>
+                <a href={entityHref(t, entity.uid)}><TitleWithParts entity={e} /></a>
                 <SeverityDot severity={worst.get(t)} />
                 <span className="link-actions">
                   {spec.many && targets.length > 1 && (
@@ -256,7 +380,7 @@ function RelationField({ entity, spec, issue }: { entity: Entity; spec: Relation
           >
             <option value="">{canAddMore ? `Link existing ${targetSpec.label.toLowerCase()}…` : `Replace with…`}</option>
             {candidates.map((c) => (
-              <option key={c.uid} value={c.uid}>{titleOf(c)}</option>
+              <option key={c.uid} value={c.uid}>{optionLabel(c)}</option>
             ))}
           </select>
         )}

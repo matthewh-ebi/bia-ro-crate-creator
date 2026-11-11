@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { emptyDraft, isDraft, reducer, STUDY_UID, targetsOf } from './draft'
+import { emptyDraft, readDraft, reducer, STUDY_UID, targetsOf } from './draft'
+import { idrLikeDraft } from '../test/fixtures'
 import { run } from '../test/fixtures'
 
 describe('draft reducer', () => {
@@ -35,15 +36,36 @@ describe('draft reducer', () => {
     expect(d.relationships).toHaveLength(1)
   })
 
-  it('single-valued relations replace their target', () => {
-    const d = run([
-      { kind: 'add', uid: 'bs', entityType: 'bioSample' },
-      { kind: 'add', uid: 'p1', entityType: 'protocol' },
-      { kind: 'add', uid: 'p2', entityType: 'protocol' },
-      { kind: 'link', from: 'bs', rel: 'growthProtocol', to: 'p1' },
-      { kind: 'link', from: 'bs', rel: 'growthProtocol', to: 'p2' },
-    ])
-    expect(targetsOf(d, 'bs', 'growthProtocol')).toEqual(['p2'])
+  describe('embedded organisms', () => {
+    const shared = () =>
+      run(
+        [
+          { kind: 'add', uid: 'bs2', entityType: 'bioSample' },
+          { kind: 'link', from: 'bs2', rel: 'organismClassification', to: 'tax' },
+        ],
+        idrLikeDraft(),
+      )
+    const has = (d: ReturnType<typeof emptyDraft>, uid: string) => d.entities.some((e) => e.uid === uid)
+
+    it('removes an organism once its last BioSample drops it', () => {
+      const d = run([{ kind: 'unlink', from: 'bs', rel: 'organismClassification', to: 'tax' }], idrLikeDraft())
+      expect(has(d, 'tax')).toBe(false)
+    })
+
+    it('keeps a shared organism until no BioSample uses it', () => {
+      const once = run([{ kind: 'unlink', from: 'bs', rel: 'organismClassification', to: 'tax' }], shared())
+      expect(has(once, 'tax')).toBe(true)
+      const twice = run([{ kind: 'delete', uid: 'bs2' }], once)
+      expect(has(twice, 'tax')).toBe(false)
+    })
+
+    it('removes an organism when its BioSample is deleted', () => {
+      expect(has(run([{ kind: 'delete', uid: 'bs' }], idrLikeDraft()), 'tax')).toBe(false)
+    })
+
+    it('discards an organism added without an owner', () => {
+      expect(has(run([{ kind: 'add', uid: 't', entityType: 'taxon' }]), 't')).toBe(false)
+    })
   })
 
   it('cascades edge removal on delete', () => {
@@ -74,8 +96,30 @@ describe('draft reducer', () => {
   })
 
   it('recognises valid drafts only', () => {
-    expect(isDraft(emptyDraft())).toBe(true)
-    expect(isDraft({ schemaVersion: 1, entities: [], relationships: [] })).toBe(false)
-    expect(isDraft({ '@context': [], '@graph': [] })).toBe(false)
+    const fresh = emptyDraft()
+    expect(readDraft(fresh)).toEqual(fresh)
+    expect(readDraft({ schemaVersion: 1, entities: [], relationships: [] })).toBeNull()
+    expect(readDraft({ '@context': [], '@graph': [] })).toBeNull()
+  })
+
+  it('migrates drafts saved before protocols and signal channels were removed', () => {
+    const old = idrLikeDraft()
+    const legacy = {
+      ...old,
+      entities: [
+        ...old.entities,
+        { uid: 'gp', type: 'protocol', fields: { name: 'growth' }, iri: '' },
+        { uid: 'ch', type: 'signalChannel', fields: {}, iri: '' },
+        { uid: 'stray', type: 'taxon', fields: {}, iri: '' },
+      ],
+      relationships: [
+        ...old.relationships,
+        { from: 'bs', rel: 'growthProtocol', to: 'gp' },
+        { from: 'sp', rel: 'signalChannelInformation', to: 'ch' },
+      ],
+    }
+    const d = readDraft(JSON.parse(JSON.stringify(legacy)))!
+    expect(d.entities.map((e) => e.uid)).toEqual(old.entities.map((e) => e.uid))
+    expect(d.relationships).toEqual(old.relationships)
   })
 })

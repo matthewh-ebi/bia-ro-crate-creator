@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { checkDraft } from './checks'
+import { checkDraft, worstByEntity } from './checks'
 import { emptyDraft, STUDY_UID } from './draft'
 import { idrLikeDraft, run } from '../test/fixtures'
 
@@ -45,16 +45,31 @@ describe('checkDraft', () => {
     expect(errors(d).some((i) => i.uid === 'bs' && i.key === 'organismClassification')).toBe(true)
   })
 
-  it('flags duplicate external identifiers', () => {
+  it('flags a duplicated organism and suggests reusing it', () => {
     const d = run(
       [
-        { kind: 'add', uid: 'tax2', entityType: 'taxon' },
+        { kind: 'add', uid: 'bs2', entityType: 'bioSample' },
+        { kind: 'add', uid: 'tax2', entityType: 'taxon', linkFrom: { from: 'bs2', rel: 'organismClassification' } },
         { kind: 'setField', uid: 'tax2', key: 'scientificName', value: 'Yeast' },
         { kind: 'setIri', uid: 'tax2', value: 'NCBITaxon_4932' },
       ],
       idrLikeDraft(),
     )
-    expect(errors(d).filter((i) => i.message.includes('NCBITaxon_4932')).map((i) => i.uid).sort()).toEqual(['tax', 'tax2'])
+    const dup = errors(d).filter((i) => i.message.includes('NCBITaxon_4932'))
+    expect(dup.map((i) => i.uid).sort()).toEqual(['tax', 'tax2'])
+    expect(dup[0].message).toContain('Reuse it')
+  })
+
+  it('counts organism problems against the owning BioSample', () => {
+    const d = run([{ kind: 'setField', uid: 'tax', key: 'scientificName', value: '' }], idrLikeDraft())
+    expect(worstByEntity(checkDraft(d), d).get('bs')).toBe('error')
+  })
+
+  it('does not warn that an organism is unlinked when its BioSample is', () => {
+    const d = run([{ kind: 'unlink', from: 'ds', rel: 'associatedBiologicalEntity', to: 'bs' }], idrLikeDraft())
+    const warned = checkDraft(d).filter((i) => i.severity === 'warning').map((i) => i.uid)
+    expect(warned).toContain('bs')
+    expect(warned).not.toContain('tax')
   })
 
   it('treats whitespace-only values as empty', () => {

@@ -212,14 +212,14 @@ export const TYPE_SPECS: readonly TypeSpec[] = [
     ],
     relations: [
       { key: 'organismClassification', label: 'Organism', target: 'taxon', many: true, requirement: 'required' },
-      { key: 'growthProtocol', label: 'Growth protocol', target: 'protocol', many: false, requirement: 'optional' },
     ],
   },
   {
     type: 'taxon',
-    label: 'Taxon',
-    plural: 'Taxa',
+    label: 'Organism',
+    plural: 'Organisms',
     group: 'Biology',
+    embedded: true,
     jsonldType: ['bia:Taxon'],
     idPrefix: 'taxon',
     titleField: 'scientificName',
@@ -227,21 +227,6 @@ export const TYPE_SPECS: readonly TypeSpec[] = [
     fields: [
       { key: 'scientificName', label: 'Scientific name', kind: 'text', requirement: 'required', placeholder: 'Saccharomyces cerevisiae' },
       { key: 'commonName', label: 'Common name', kind: 'text', requirement: 'optional' },
-    ],
-    relations: [],
-  },
-  {
-    type: 'protocol',
-    label: 'Protocol',
-    plural: 'Protocols',
-    group: 'Biology',
-    jsonldType: ['bia:Protocol'],
-    idPrefix: 'protocol',
-    titleField: 'name',
-    description: 'Generic protocol: growth protocols, analysis protocols, etc.',
-    fields: [
-      { key: 'name', label: 'Name', kind: 'text', requirement: 'required' },
-      { key: 'description', label: 'Description', kind: 'textarea', requirement: 'required' },
     ],
     relations: [],
   },
@@ -257,24 +242,6 @@ export const TYPE_SPECS: readonly TypeSpec[] = [
     fields: [
       { key: 'name', label: 'Name', kind: 'text', requirement: 'required' },
       { key: 'description', label: 'Description', kind: 'textarea', requirement: 'required' },
-    ],
-    relations: [
-      { key: 'signalChannelInformation', label: 'Signal channels', target: 'signalChannel', many: true, requirement: 'optional' },
-    ],
-  },
-  {
-    type: 'signalChannel',
-    label: 'Signal channel',
-    plural: 'Signal channels',
-    group: 'Imaging',
-    jsonldType: ['bia:SignalChannel'],
-    idPrefix: 'channel',
-    titleField: 'identifier',
-    fields: [
-      { key: 'identifier', label: 'Channel label', kind: 'text', requirement: 'required', placeholder: 'mCherry' },
-      { key: 'channelContentDescription', label: 'Content', kind: 'text', requirement: 'recommended' },
-      { key: 'channelBiologicalEntity', label: 'Biological entity', kind: 'text', requirement: 'optional' },
-      { key: 'signalContrastMechanismDescription', label: 'Contrast mechanism', kind: 'text', requirement: 'optional' },
     ],
     relations: [],
   },
@@ -333,7 +300,6 @@ export const TYPE_SPECS: readonly TypeSpec[] = [
       { key: 'associatedSpecimenImagingPreparationProtocol', label: 'Specimen preparation', target: 'specimenPrep', many: true, requirement: 'optional' },
       { key: 'associatedImageAcquisitionProtocol', label: 'Image acquisition', target: 'imageAcquisition', many: true, requirement: 'optional' },
       { key: 'associatedAnnotationMethod', label: 'Annotation methods', target: 'annotationMethod', many: true, requirement: 'optional' },
-      { key: 'associatedProtocol', label: 'Other protocols', target: 'protocol', many: true, requirement: 'optional' },
     ],
   },
 ]

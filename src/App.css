@@ -622,3 +622,45 @@ code {
     gap: 2px;
   }
 }
+
+/* ── Embedded parts (e.g. a BioSample's organisms) ───────── */
+.parts {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+.side-link.current .parts {
+  color: inherit;
+  opacity: 0.75;
+}
+.embedded {
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--green);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  background: var(--panel);
+}
+.embedded-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.embedded .field {
+  margin-bottom: 12px;
+}
+.shared-note {
+  margin: -4px 0 10px;
+}
+.card-title .req {
+  vertical-align: middle;
+  margin-left: 4px;
+}
+.card-invalid {
+  border-color: var(--error);
+}
+.field-error {
+  color: var(--error);
+  font-size: 13px;
+  margin: 4px 0 8px;
+}

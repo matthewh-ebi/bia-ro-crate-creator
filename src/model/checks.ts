@@ -1,5 +1,5 @@
 import { ANNOTATION_KEY, EXPERIMENTAL_TRIPLE, SPEC_BY_TYPE } from '../schema/biaSchema'
-import { STUDY_UID, relationSpec, targetsOf, type Draft, type Entity, type FieldValue } from './draft'
+import { STUDY_UID, ownersOf, relationSpec, targetsOf, type Draft, type Entity, type FieldValue } from './draft'
 
 /**
  * Completeness checks run live in the editor. They mirror the explorer's
@@ -8,6 +8,9 @@ import { STUDY_UID, relationSpec, targetsOf, type Draft, type Entity, type Field
  */
 
 export type Severity = 'error' | 'warning' | 'info'
+
+/** Issue key for an entity's external identifier (ORCID/ROR/DOI/taxon). */
+export const IRI_KEY = '@iri'
 
 export interface Issue {
   uid: string
@@ -90,7 +93,8 @@ export function checkDraft(draft: Draft): Issue[] {
 
   const linked = reachable(draft)
   for (const e of draft.entities) {
-    if (!linked.has(e.uid)) {
+    // Embedded entities are covered by their owner's warning.
+    if (!linked.has(e.uid) && !SPEC_BY_TYPE[e.type].embedded) {
       out.push({
         uid: e.uid,
         severity: 'warning',
@@ -108,7 +112,15 @@ export function checkDraft(draft: Draft): Issue[] {
   for (const [iri, es] of byIri) {
     if (es.length < 2) continue
     for (const e of es) {
-      out.push({ uid: e.uid, severity: 'error', message: `Identifier ${iri} is used by ${es.length} entities.` })
+      const spec = SPEC_BY_TYPE[e.type]
+      out.push({
+        uid: e.uid,
+        key: IRI_KEY,
+        severity: 'error',
+        message: spec.embedded
+          ? `Another ${spec.label.toLowerCase()} already has ${iri}. Reuse it (“Use existing”) instead of adding a copy.`
+          : `Identifier ${iri} is used by ${es.length} entities.`,
+      })
     }
   }
   return out
@@ -116,12 +128,23 @@ export function checkDraft(draft: Draft): Issue[] {
 
 export const SEVERITY_RANK: Record<Severity, number> = { error: 0, warning: 1, info: 2 }
 
-/** Worst severity per entity uid. */
-export function worstByEntity(issues: Issue[]): Map<string, Severity> {
+/**
+ * Worst severity per entity uid. Issues on embedded entities (organisms) also
+ * count against the entities that own them, since that is where they're fixed.
+ */
+export function worstByEntity(issues: Issue[], draft: Draft): Map<string, Severity> {
   const m = new Map<string, Severity>()
+  const bump = (uid: string, sev: Severity) => {
+    const cur = m.get(uid)
+    if (cur === undefined || SEVERITY_RANK[sev] < SEVERITY_RANK[cur]) m.set(uid, sev)
+  }
+  const typeOf = new Map(draft.entities.map((e) => [e.uid, e.type]))
   for (const i of issues) {
-    const cur = m.get(i.uid)
-    if (cur === undefined || SEVERITY_RANK[i.severity] < SEVERITY_RANK[cur]) m.set(i.uid, i.severity)
+    bump(i.uid, i.severity)
+    const type = typeOf.get(i.uid)
+    if (type && SPEC_BY_TYPE[type].embedded) {
+      for (const owner of ownersOf(draft, i.uid)) bump(owner.uid, i.severity)
+    }
   }
   return m
 }
