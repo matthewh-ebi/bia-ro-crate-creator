@@ -55,21 +55,21 @@ export function Overview() {
           <p className="muted">No datasets yet. A dataset links a BioSample, specimen preparation and image acquisition (or an annotation method).</p>
         ) : (
           <div className="table-wrap">
-            <table className="matrix">
-              <thead>
-                <tr>
-                  <th>Dataset</th>
-                  {MATRIX_COLUMNS.map((c) => <th key={c.key}>{c.label}</th>)}
+            <table className="vf-table vf-table--striped dataset-table">
+              <thead className="vf-table__header">
+                <tr className="vf-table__row">
+                  <th className="vf-table__heading" scope="col">Dataset</th>
+                  {MATRIX_COLUMNS.map((c) => <th key={c.key} className="vf-table__heading" scope="col">{c.label}</th>)}
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="vf-table__body">
                 {datasets.map((d) => (
-                  <tr key={d.uid}>
-                    <th scope="row">
+                  <tr key={d.uid} className="vf-table__row">
+                    <th className="vf-table__heading" scope="row">
                       <a href={entityHref(d.uid)}>{titleOf(d)}</a> <SeverityDot severity={worst.get(d.uid)} />
                     </th>
                     {MATRIX_COLUMNS.map((c) => (
-                      <td key={c.key}>
+                      <td key={c.key} className="vf-table__cell">
                         <Targets list={targetsOf(draft, d.uid, c.key).map((u) => byUid.get(u)!)} from={d.uid} />
                       </td>
                     ))}

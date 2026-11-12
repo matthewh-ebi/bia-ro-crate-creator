@@ -53,13 +53,19 @@ export function ExportView() {
         <h2 className="card-title">File list</h2>
         <pre className="code small-code">{tsv}</pre>
         {datasetIds.length > 0 && (
-          <table className="simple">
-            <thead>
-              <tr><th>Dataset</th><th><code>dataset</code> column value</th></tr>
+          <table className="vf-table vf-table--striped id-table">
+            <thead className="vf-table__header">
+              <tr className="vf-table__row">
+                <th className="vf-table__heading" scope="col">Dataset</th>
+                <th className="vf-table__heading" scope="col"><code>dataset</code> column value</th>
+              </tr>
             </thead>
-            <tbody>
+            <tbody className="vf-table__body">
               {datasetIds.map((d) => (
-                <tr key={d.id}><td>{d.name}</td><td><code>{d.id}</code></td></tr>
+                <tr key={d.id} className="vf-table__row">
+                  <td className="vf-table__cell">{d.name}</td>
+                  <td className="vf-table__cell"><code>{d.id}</code></td>
+                </tr>
               ))}
             </tbody>
           </table>

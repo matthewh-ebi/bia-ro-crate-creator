@@ -228,7 +228,7 @@
   display: inline-block;
 }
 .links .dot,
-.matrix .dot {
+.vf-table .dot {
   margin-left: 0;
 }
 .dot-error {
@@ -533,36 +533,7 @@ select:focus {
 .table-wrap {
   overflow-x: auto;
 }
-.matrix,
-.simple {
-  border-collapse: collapse;
-  width: 100%;
-  font-size: 14px;
-}
-.matrix th,
-.matrix td,
-.simple th,
-.simple td {
-  text-align: left;
-  padding: 7px 10px;
-  border-bottom: 1px solid var(--border);
-  vertical-align: top;
-}
-.matrix thead th,
-.simple thead th {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-.matrix tbody th {
-  font-weight: 500;
-  white-space: nowrap;
-}
-.simple {
-  margin-top: 12px;
-}
+
 
 /* ── Code ────────────────────────────────────────────────── */
 .code {
@@ -863,4 +834,25 @@ code {
 .field .vf-form__textarea,
 .field .vf-form__select {
   font-size: 15px;
+}
+
+/* VF tables: full width, with body-size text to match the rest of the editor. */
+.app .vf-table {
+  width: 100%;
+}
+.app .vf-table__heading,
+.app .vf-table__cell {
+  font-size: 14.5px;
+  padding: 8px 12px;
+}
+.app .vf-table__header .vf-table__heading {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.dataset-table tbody .vf-table__heading {
+  white-space: nowrap;
+  vertical-align: top;
+}
+.id-table {
+  margin-top: 12px;
 }
