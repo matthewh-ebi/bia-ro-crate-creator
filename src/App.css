@@ -816,3 +816,51 @@ code {
     justify-self: start;
   }
 }
+
+/* ── EMBL Visual Framework integration ───────────────────── */
+/* VF components are designed for page flow; tighten them for a dense app UI. */
+.app .vf-button {
+  margin: 0;
+}
+.app .vf-button--sm {
+  font-size: 14px;
+  padding: 6px 12px;
+}
+.topbar .vf-button--link {
+  padding-left: 8px;
+  padding-right: 8px;
+}
+.banner {
+  margin: 16px 0 0;
+}
+.banner .vf-banner {
+  padding: 10px 14px;
+  margin-bottom: 6px;
+}
+.banner .vf-banner__text {
+  font-size: 14.5px;
+  margin: 0;
+}
+.field.vf-form__item {
+  margin-bottom: 16px;
+}
+.field-label .vf-form__label {
+  position: static;
+  opacity: 1;
+  visibility: visible;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--charcoal);
+}
+.field .vf-form__helper {
+  margin: 0;
+  font-size: 13px;
+}
+.field .vf-form__helper--error {
+  margin-top: 4px;
+}
+.field .vf-form__input,
+.field .vf-form__textarea,
+.field .vf-form__select {
+  font-size: 15px;
+}

@@ -44,8 +44,8 @@ export function ExportView() {
           <code>dataset</code> column. Then unzip and load the folder into the BIA RO-Crate Explorer.
         </p>
         <div className="row">
-          <button type="button" className="btn primary" onClick={download}>Download crate (.zip)</button>
-          <button type="button" className="btn" onClick={copy}>{copied ? 'Copied' : 'Copy JSON'}</button>
+          <button type="button" className="vf-button vf-button--primary vf-button--sm" onClick={download}>Download crate (.zip)</button>
+          <button type="button" className="vf-button vf-button--secondary vf-button--sm" onClick={copy}>{copied ? 'Copied' : 'Copy JSON'}</button>
         </div>
       </section>
 

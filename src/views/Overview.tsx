@@ -49,7 +49,7 @@ export function Overview() {
       <section className="card">
         <div className="card-head">
           <h2 className="card-title">Datasets</h2>
-          <button type="button" className="btn small" onClick={addDataset}>+ New dataset</button>
+          <button type="button" className="vf-button vf-button--secondary vf-button--sm" onClick={addDataset}>+ New dataset</button>
         </div>
         {datasets.length === 0 ? (
           <p className="muted">No datasets yet. A dataset links a BioSample, specimen preparation and image acquisition (or an annotation method).</p>

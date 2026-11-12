@@ -59,7 +59,7 @@ export function DatasetRail({ route }: { route: Route }) {
           focus={focus}
         />
       ))}
-      <button type="button" className="btn small rail-new" onClick={create}>
+      <button type="button" className="vf-button vf-button--secondary vf-button--sm rail-new" onClick={create}>
         {focus ? `+ New dataset with “${titleOf(focus.entity)}”` : '+ New dataset'}
       </button>
     </aside>

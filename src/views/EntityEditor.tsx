@@ -8,6 +8,9 @@ import { newUid, useDraft } from '../store/DraftContext'
 import { RequirementTag, SeverityDot, TitleWithParts } from './bits'
 import { entityHref, go } from './route'
 
+/** Issue severity → VF alert banner theme. */
+const BANNER_THEME = { error: 'danger', warning: 'warning', info: 'info' } as const
+
 export function EntityEditor({ uid, from }: { uid: string; from?: string }) {
   const { draft, dispatch, issues } = useDraft()
   const ids = useMemo(() => assignIds(draft), [draft])
@@ -74,17 +77,21 @@ export function EntityEditor({ uid, from }: { uid: string; from?: string }) {
           <code className="crate-id" title="@id in the exported crate">{ids.get(uid)}</code>
         </div>
         {!spec.singleton && (
-          <button type="button" className="btn danger" onClick={remove}>Delete</button>
+          <button type="button" className="vf-button vf-button--secondary vf-button--sm" onClick={remove}>Delete</button>
         )}
       </div>
       {spec.description && <p className="type-desc">{spec.description}</p>}
 
       {banner.length > 0 && (
-        <ul className="banner">
+        <div className="banner">
           {banner.map((i, n) => (
-            <li key={n} className={`sev-${i.severity}`}>{i.message}</li>
+            <div key={n} className={`vf-banner vf-banner--alert vf-banner--${BANNER_THEME[i.severity]}`}>
+              <div className="vf-banner__content">
+                <p className="vf-banner__text">{i.message}</p>
+              </div>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
 
       <section className="card">
@@ -135,9 +142,9 @@ export function EntityEditor({ uid, from }: { uid: string; from?: string }) {
 function FieldLabel({ htmlFor, label, requirement, help }: { htmlFor?: string; label: string; requirement: FieldSpec['requirement']; help?: string }) {
   return (
     <div className="field-label">
-      <label htmlFor={htmlFor}>{label}</label>
+      <label className="vf-form__label" htmlFor={htmlFor}>{label}</label>
       <RequirementTag requirement={requirement} />
-      {help && <span className="help">{help}</span>}
+      {help && <span className="vf-form__helper help">{help}</span>}
     </div>
   )
 }
@@ -148,16 +155,17 @@ function IriField({ entity, issue }: { entity: Entity; issue?: Issue }) {
   const id = useId()
   const resolved = iri.normalise(entity.iri)
   return (
-    <div className={`field ${issue?.severity === 'error' ? 'invalid' : ''}`}>
+    <div className={`field vf-form__item ${issue?.severity === 'error' ? 'invalid' : ''}`}>
       <FieldLabel htmlFor={id} label={iri.label} requirement="optional" help={iri.help} />
       <input
         id={id}
+        className={`vf-form__input ${issue?.severity === 'error' ? 'vf-form__input--invalid' : ''}`}
         value={entity.iri}
         placeholder={iri.placeholder}
         onChange={(e) => dispatch({ kind: 'setIri', uid: entity.uid, value: e.target.value })}
       />
       {resolved && resolved !== entity.iri.trim() && <div className="hint">→ {resolved}</div>}
-      {issue && <div className="field-error">{issue.message}</div>}
+      {issue && <p className="vf-form__helper vf-form__helper--error">{issue.message}</p>}
     </div>
   )
 }
@@ -196,7 +204,7 @@ function EmbeddedRelation({ entity, spec, issue }: { entity: Entity; spec: Relat
         <div className="link-add">
           <button
             type="button"
-            className="btn small"
+            className="vf-button vf-button--secondary vf-button--sm"
             onClick={() => dispatch({ kind: 'add', uid: newUid(), entityType: spec.target, linkFrom: { from: entity.uid, rel: spec.key } })}
           >
             + Add {noun}
@@ -204,6 +212,7 @@ function EmbeddedRelation({ entity, spec, issue }: { entity: Entity; spec: Relat
           {candidates.length > 0 && (
             <select
               id={id}
+              className="vf-form__select"
               aria-label={`Use an existing ${noun}`}
               value=""
               onChange={(e) => e.target.value && dispatch({ kind: 'link', from: entity.uid, rel: spec.key, to: e.target.value })}
@@ -233,7 +242,7 @@ function EmbeddedCard({ owner, rel, target }: { owner: Entity; rel: string; targ
         <strong>{titleOf(target)}</strong>
         <button
           type="button"
-          className="btn small ghost"
+          className="vf-button vf-button--link vf-button--sm"
           title={others.length ? `Remove from this ${SPEC_BY_TYPE[owner.type].label} (kept for the others)` : undefined}
           onClick={() => dispatch({ kind: 'unlink', from: owner.uid, rel, to: target.uid })}
         >
@@ -263,15 +272,16 @@ function Field({ entity, spec, issue }: { entity: Entity; spec: FieldSpec; issue
   const str = Array.isArray(value) ? value.join(', ') : (value ?? '')
 
   return (
-    <div className={`field ${invalid ? 'invalid' : ''}`}>
+    <div className={`field vf-form__item ${invalid ? 'invalid' : ''}`}>
       <FieldLabel htmlFor={id} label={spec.label} requirement={spec.requirement} help={spec.help} />
       {spec.kind === 'list' ? (
         <ListInput id={id} values={Array.isArray(value) ? value : value ? [value] : []} onChange={set} placeholder={spec.placeholder} listId={listId} />
       ) : spec.kind === 'textarea' ? (
-        <textarea id={id} rows={4} value={str} placeholder={spec.placeholder} onChange={(e) => set(e.target.value)} />
+        <textarea id={id} className={`vf-form__textarea ${invalid ? 'vf-form__input--invalid' : ''}`} rows={4} value={str} placeholder={spec.placeholder} onChange={(e) => set(e.target.value)} />
       ) : (
         <input
           id={id}
+          className={`vf-form__input ${invalid ? 'vf-form__input--invalid' : ''}`}
           type={spec.kind === 'date' ? 'date' : spec.kind === 'email' ? 'email' : spec.kind === 'url' ? 'url' : 'text'}
           value={str}
           placeholder={spec.placeholder}
@@ -344,7 +354,7 @@ function RelationField({ entity, spec, issue }: { entity: Entity; spec: Relation
   }
 
   return (
-    <div className={`field ${issue?.severity === 'error' ? 'invalid' : ''}`}>
+    <div className={`field vf-form__item ${issue?.severity === 'error' ? 'invalid' : ''}`}>
       <FieldLabel htmlFor={id} label={spec.label} requirement={spec.requirement} help={spec.help} />
       {targets.length > 0 && (
         <ol className="links">
@@ -375,6 +385,7 @@ function RelationField({ entity, spec, issue }: { entity: Entity; spec: Relation
         {candidates.length > 0 && (
           <select
             id={id}
+            className="vf-form__select"
             value=""
             onChange={(e) => e.target.value && dispatch({ kind: 'link', from: entity.uid, rel: spec.key, to: e.target.value })}
           >
@@ -385,7 +396,7 @@ function RelationField({ entity, spec, issue }: { entity: Entity; spec: Relation
           </select>
         )}
         {canAddMore && (
-          <button type="button" className="btn small" onClick={createNew}>+ New {targetSpec.label.toLowerCase()}</button>
+          <button type="button" className="vf-button vf-button--secondary vf-button--sm" onClick={createNew}>+ New {targetSpec.label.toLowerCase()}</button>
         )}
       </div>
     </div>

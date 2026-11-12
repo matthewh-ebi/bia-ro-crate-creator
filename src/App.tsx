@@ -72,9 +72,9 @@ function Shell() {
               : 'Saved in this browser'}
         </span>
         <div className="topbar-actions">
-          <button type="button" className="btn ghost" onClick={reset}>New</button>
-          <button type="button" className="btn ghost" onClick={backup}>Backup draft</button>
-          <button type="button" className="btn ghost" onClick={() => fileInput.current?.click()}>Restore</button>
+          <button type="button" className="vf-button vf-button--link vf-button--sm" onClick={reset}>New</button>
+          <button type="button" className="vf-button vf-button--link vf-button--sm" onClick={backup}>Backup draft</button>
+          <button type="button" className="vf-button vf-button--link vf-button--sm" onClick={() => fileInput.current?.click()}>Restore</button>
           <input
             ref={fileInput}
             type="file"
@@ -86,7 +86,7 @@ function Shell() {
               e.target.value = ''
             }}
           />
-          <a className={`btn primary ${route.view === 'export' ? 'active' : ''}`} href="#/export">Export crate</a>
+          <a className="vf-button vf-button--primary vf-button--sm" href="#/export">Export crate</a>
         </div>
       </header>
       <div className="body">
